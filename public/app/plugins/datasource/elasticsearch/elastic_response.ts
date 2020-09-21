@@ -203,7 +203,7 @@ export class ElasticResponse {
 
   // This is quite complex
   // need to recurse down the nested buckets to build series
-  processBuckets(aggs: any, target: any, seriesList: any, table: any, props: any, depth: any) {
+  processBuckets(aggs: any, target: any, seriesList: any, table: TableModel, props: any, depth: any) {
     let bucket, aggDef: any, esAgg, aggId;
     const maxDepth = target.bucketAggs.length - 1;
 
@@ -493,6 +493,7 @@ export class ElasticResponse {
         const aggregations = response.aggregations;
         const tmpSeriesList: any[] = [];
         const table = new TableModel();
+        table.refId = target.refId;
 
         this.processBuckets(aggregations, target, tmpSeriesList, table, {}, 0);
         this.trimDatapoints(tmpSeriesList, target);
