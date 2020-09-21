@@ -14,6 +14,314 @@ describe('ElasticResponse', () => {
   let response: any;
   let result: any;
 
+  describe('refId matching', () => {
+    beforeEach(() => {
+      targets = [
+        // Simple count
+        {
+          refId: 'A',
+          metrics: [{ type: 'count', id: '1' }],
+          bucketAggs: [{ type: 'date_histogram', field: '@timestamp', id: '2' }],
+        },
+        // single group by query one metric
+        {
+          refId: 'B',
+          metrics: [{ type: 'count', id: '3' }],
+          bucketAggs: [
+            { type: 'terms', field: 'host', id: '4' },
+            { type: 'date_histogram', field: '@timestamp', id: '5' },
+          ],
+        },
+        // single group by query two metrics
+        {
+          refId: 'C',
+          metrics: [
+            { type: 'count', id: '6' },
+            { type: 'avg', field: '@value', id: '7' },
+          ],
+          bucketAggs: [
+            { type: 'terms', field: 'host', id: '8' },
+            { type: 'date_histogram', field: '@timestamp', id: '9' },
+          ],
+        },
+        // percentiles
+        {
+          refId: 'D',
+          metrics: [{ type: 'percentiles', settings: { percents: [75, 90] }, id: '10' }],
+          bucketAggs: [{ type: 'date_histogram', field: '@timestamp', id: '11' }],
+        },
+        // Extended stats
+        {
+          refId: 'E',
+          metrics: [
+            {
+              type: 'extended_stats',
+              meta: { max: true, std_deviation_bounds_upper: true },
+              id: '12',
+            },
+          ],
+          bucketAggs: [
+            { type: 'terms', field: 'host', id: '13' },
+            { type: 'date_histogram', id: '14' },
+          ],
+        },
+        // Histogram Response
+        {
+          refId: 'F',
+          metrics: [{ type: 'count', id: '15' }],
+          bucketAggs: [{ type: 'histogram', field: 'bytes', id: '16' }],
+        },
+        // Filters agg
+        {
+          refId: 'G',
+          metrics: [{ type: 'count', id: '17' }],
+          bucketAggs: [
+            {
+              id: '18',
+              type: 'filters',
+              settings: {
+                filters: [{ query: '@metric:cpu' }, { query: '@metric:logins.count' }],
+              },
+            },
+            { type: 'date_histogram', field: '@timestamp', id: '19' },
+          ],
+        },
+        // Raw document query
+        {
+          refId: 'H',
+          metrics: [{ type: 'raw_document', id: '20' }],
+          bucketAggs: [],
+        },
+        // Bucket script
+        {
+          refId: 'I',
+          metrics: [
+            { id: '21', type: 'sum', field: '@value' },
+            { id: '23', type: 'max', field: '@value' },
+            {
+              id: '24',
+              field: 'select field',
+              pipelineVariables: [
+                { name: 'var1', pipelineAgg: '21' },
+                { name: 'var2', pipelineAgg: '23' },
+              ],
+              settings: { script: 'params.var1 * params.var2' },
+              type: 'bucket_script',
+            },
+          ],
+          bucketAggs: [{ type: 'date_histogram', field: '@timestamp', id: '22' }],
+        },
+      ];
+
+      response = {
+        responses: [
+          // Simple count
+          {
+            aggregations: {
+              '2': {
+                buckets: [
+                  {
+                    doc_count: 10,
+                    key: 1000,
+                  },
+                  {
+                    doc_count: 15,
+                    key: 2000,
+                  },
+                ],
+              },
+            },
+          },
+          // single group by query one metric
+          {
+            aggregations: {
+              '4': {
+                buckets: [
+                  {
+                    '5': {
+                      buckets: [
+                        { doc_count: 1, key: 1000 },
+                        { doc_count: 3, key: 2000 },
+                      ],
+                    },
+                    doc_count: 4,
+                    key: 'server1',
+                  },
+                ],
+              },
+            },
+          },
+          // single group by query two metrics
+          {
+            aggregations: {
+              '8': {
+                buckets: [
+                  {
+                    '9': {
+                      buckets: [{ '7': { value: 10 }, doc_count: 1, key: 1000 }],
+                    },
+                    doc_count: 4,
+                    key: 'server1',
+                  },
+                ],
+              },
+            },
+          },
+          // percentiles
+          {
+            aggregations: {
+              '11': {
+                buckets: [
+                  {
+                    '10': { values: { '75': 3.3, '90': 5.5 } },
+                    doc_count: 10,
+                    key: 1000,
+                  },
+                ],
+              },
+            },
+          },
+          // Extended stats:
+          {
+            aggregations: {
+              '13': {
+                buckets: [
+                  {
+                    key: 'server1',
+                    '14': {
+                      buckets: [
+                        {
+                          '12': {
+                            max: 10.2,
+                            min: 5.5,
+                            std_deviation_bounds: { upper: 3, lower: -2 },
+                          },
+                          doc_count: 10,
+                          key: 1000,
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          },
+          // Histogram Response
+          {
+            aggregations: {
+              '16': {
+                buckets: [
+                  { doc_count: 1, key: 1000 },
+                  { doc_count: 3, key: 2000 },
+                  { doc_count: 2, key: 1000 },
+                ],
+              },
+            },
+          },
+          // two filters agg
+          {
+            aggregations: {
+              '18': {
+                buckets: {
+                  '@metric:cpu': {
+                    '19': {
+                      buckets: [
+                        { doc_count: 1, key: 1000 },
+                        { doc_count: 3, key: 2000 },
+                      ],
+                    },
+                  },
+                  '@metric:logins.count': {
+                    '19': {
+                      buckets: [
+                        { doc_count: 2, key: 1000 },
+                        { doc_count: 8, key: 2000 },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          // Raw document query
+          {
+            hits: {
+              total: 100,
+              hits: [
+                {
+                  _id: '20',
+                  _type: 'type',
+                  _index: 'index',
+                  _source: { sourceProp: 'asd' },
+                  fields: { fieldProp: 'field' },
+                },
+                {
+                  _source: { sourceProp: 'asd2' },
+                  fields: { fieldProp: 'field2' },
+                },
+              ],
+            },
+          },
+          // Bucket script
+          {
+            aggregations: {
+              '22': {
+                buckets: [
+                  {
+                    21: { value: 2 },
+                    23: { value: 3 },
+                    24: { value: 6 },
+                    doc_count: 60,
+                    key: 1000,
+                  },
+                  {
+                    21: { value: 3 },
+                    23: { value: 4 },
+                    24: { value: 12 },
+                    doc_count: 60,
+                    key: 2000,
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      };
+
+      result = new ElasticResponse(targets, response).getTimeSeries();
+    });
+
+    it('should add the correct refId to each returned series', () => {
+      expect(result.data[0].refId).toBe('A');
+
+      expect(result.data[1].refId).toBe('B');
+
+      expect(result.data[2].refId).toBe('C');
+      expect(result.data[3].refId).toBe('C');
+
+      expect(result.data[4].refId).toBe('D');
+      expect(result.data[5].refId).toBe('D');
+
+      // Extended Stats
+      expect(result.data[6].refId).toBe('E'); // Max
+      expect(result.data[7].refId).toBe('E'); // std_deviation_bounds_upper
+
+      // Histogram Response
+      expect(result.data[8].refId).toBe('F');
+
+      // with two filters agg
+      expect(result.data[9].refId).toBe('G');
+      expect(result.data[10].refId).toBe('G');
+
+      // Raw document query
+      // Transform picks this property instead of refId when raw_document
+      expect(result.data[11].target).toBe('H');
+
+      // Bucket Script
+      expect(result.data[12].refId).toBe('I');
+    });
+  });
+
   describe('simple query and count', () => {
     beforeEach(() => {
       targets = [
