@@ -1,0 +1,34 @@
+{
+  "name": "LinkSmart SensorThings",
+  "id": "linksmart-sensorthings-datasource",
+  "type": "datasource",
+  "partials": {
+    "config": "public/app/plugins/datasource/linksmart-sensorthings-datasource/partials/config.html"
+  },
+  "metrics": true,
+  "annotations": false,
+  "info": {
+    "description": "OGC SensorThings datasource plugin",
+    "author": {
+      "name": "Fraunhofer FIT",
+      "url": "http://www.fit.fraunhofer.de/en.html"
+    },
+    "keywords": ["time-series", "location", "sensorthings", "datasource", "linksmart"],
+    "logos": {
+      "small": "img/LinkSmart_SensorThings_logo.svg",
+      "large": "img/LinkSmart_SensorThings_logo.svg"
+    },
+    "links": [
+      {"name": "Changelog", "url": "https://github.com/linksmart/grafana-sensorthings-datasource/blob/master/CHANGELOG.md"},
+      {"name": "Source Codes", "url": "https://github.com/linksmart/grafana-sensorthings-datasource"},
+      {"name": "OGC SensorThings API", "url": "https://github.com/opengeospatial/sensorthings"},
+      {"name": "LinkSmart", "url": "https://linksmart.eu"}
+    ],
+    "version": "1.3.0",
+    "updated": "2019-08-06"
+  },
+  "dependencies": {
+    "grafanaVersion": "4.x.x",
+    "plugins": [ ]
+  }
+}

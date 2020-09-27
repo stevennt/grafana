@@ -1,0 +1,33 @@
+{
+  "type": "datasource",
+  "name": "kdb+",
+  "id": "aquaqanalytics-kdbadaptor-datasource",
+  "info": {
+    "description": "A Grafana datasource plugin for kdb+",
+    "author": {
+      "name": "AquaQ Analytics",
+      "url": "https://www.aquaq.co.uk"
+    },
+    "keywords": ["kdb", "kdb+"],
+    "logos": {
+      "small": "img/AquaQ_Logo_Square.png",
+      "large": "img/AquaQ_Logo_Square.png"
+    },
+    "links": [
+      {"name":"Github", "url":"https://github.com/AquaQAnalytics"},
+      {"name":"AquaQ Analytics", "url":"https://www.aquaq.co.uk"}
+    ],
+    "version": "1.0.1",
+    "updated": "2020-04-16"
+  },
+  "alerting": true,
+  "annotations": false,
+  "metrics": true,
+  "queryOptions": {
+    "minInterval": true
+  },
+  "dependencies": {
+    "grafanaVersion": "6.x",
+    "plugins": []
+  }
+}
