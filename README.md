@@ -4,9 +4,12 @@ git checkout stevendev2
 
 docker build . -f Dockerfile.ubuntu
 
-mkdir data
-docker run -p 3000:3000 --user $(id -u) -v "$PWD/data:/var/lib/grafana” 18da0e8488ab
+- already have mount-varlibgrafana
+- docker run -p 3000:3000 --user $(id -u) -v "$PWD/mount-varlibgrafana:/var/lib/grafana” 18da0e8488ab
+- maybe also mount another place: docker run -p 3000:3000 --user $(id -u) -v "$PWD/mount-varlibgrafana:/var/lib/grafana" -v "$PWD/mount-varloggrafana:/var/log/grafana" -v "$PWD/mount-etcgrafana:/etc/grafana 18da0e8488ab
 (https://grafana.com/docs/grafana/latest/installation/configure-docker/ with bind mounts)
+- deprecated: mkdir data
+- deprecated: docker run -p 3000:3000 --user $(id -u) -v "$PWD/data:/var/lib/grafana” 18da0e8488ab
 
 
 
