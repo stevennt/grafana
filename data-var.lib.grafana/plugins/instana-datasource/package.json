@@ -1,0 +1,33 @@
+{
+  "name": "instana-datasource",
+  "version": "1.0.0",
+  "description": "Instana Data Source for Grafana",
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch",
+    "up": "docker-compose up --remove-orphans",
+    "start": "yarn up -d; yarn watch",
+    "format": "prettier src/**/*.ts --write"
+  },
+  "author": "Instana",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@grafana/data": "latest",
+    "@grafana/runtime": "latest",
+    "@grafana/toolkit": "latest",
+    "@grafana/ui": "latest",
+    "@types/lodash": "4.14.155",
+    "axios": "^0.19.2",
+    "prettier": "^2.0.5",
+    "prettier-eslint": "^11.0.0",
+    "prettier-eslint-cli": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/react": "^16.9.35",
+    "@types/react-dom": "^16.9.8",
+    "eslint-plugin-prettier": "^3.1.4",
+    "lodash": "^4.17.15"
+  }
+}

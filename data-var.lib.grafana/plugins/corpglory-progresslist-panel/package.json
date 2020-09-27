@@ -1,0 +1,33 @@
+{
+  "name": "grafana-progress-list-plugin",
+  "version": "1.0.5",
+  "description": "Show list of progress items by mapping your data.",
+  "main": "src/module.js",
+  "scripts": {
+    "build": "webpack --config build/webpack.prod.conf.js",
+    "dev": "webpack --config build/webpack.dev.conf.js"
+  },
+  "keywords": [
+    "grafana",
+    "plugin",
+    "progress list"
+  ],
+  "author": "CorpGlory Inc.",
+  "license": "MIT",
+  "repository": "https://github.com/CorpGlory/grafana-progress-list",
+  "devDependencies": {
+    "@types/angular": "^1.5.8",
+    "@types/grafana": "git+https://git@github.com/CorpGlory/types-grafana.git",
+    "@types/jquery": "^3.3.31",
+    "@types/lodash": "^4.14.74",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    "copy-webpack-plugin": "^5.0.3",
+    "loader-utils": "^1.1.0",
+    "ts-loader": "^4.5.0",
+    "typescript": "^2.9.2",
+    "webpack": "4.7.0",
+    "webpack-cli": "^2.1.2"
+  }
+}
