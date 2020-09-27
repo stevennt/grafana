@@ -1,0 +1,12 @@
+node_modules
+coverage
+npm-debug.log
+.env.test.local
+.DS_Store
+.vscode
+.idea
+*.swp
+results.txt
+.prettierrc.js
+jest.config.js
+setEnvVars.js

@@ -1,0 +1,31 @@
+{
+  "name": "NetXMS",
+  "id": "radensolutions-netxms-datasource",
+  "type": "datasource",
+
+  "partials": {
+    "config": "partials/config.html"
+  },
+
+  "metrics": true,
+  "annotations": false,
+
+  "info": {
+    "description": "NetXMS datasource for grafana",
+    "author": {
+      "name": "Raden Solutions",
+      "url": "http://radensolutions.com"
+    },
+    "version": "1.2.2",
+    "updated": "2020-04-09",
+    "logos": {
+      "small": "img/netxms_logo.png",
+      "large": "img/netxms_logo.png"
+    }
+  },
+
+  "dependencies": {
+    "grafanaVersion": "5.2.0",
+    "plugins": [ ]
+  }
+}

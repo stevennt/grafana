@@ -1,0 +1,7 @@
+node_modules
+
+# locally required config files
+public/css/*.min.css
+
+# Editor junk
+*.swp
