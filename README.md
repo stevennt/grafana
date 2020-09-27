@@ -1,3 +1,16 @@
+git clone https://github.com/stevennt/ABNGrafana [changed from the stevennt/grafana fork]
+cd ABNGrafana
+git checkout stevendev2
+
+docker build . -f Dockerfile.ubuntu
+
+mkdir data
+docker run -p 3000:3000 --user $(id -u) -v "$PWD/data:/var/lib/grafana” 18da0e8488ab
+(https://grafana.com/docs/grafana/latest/installation/configure-docker/ with bind mounts)
+
+
+
+
 ![Grafana](docs/logo-horizontal.png)
 
 The open-source platform for monitoring and observability.
