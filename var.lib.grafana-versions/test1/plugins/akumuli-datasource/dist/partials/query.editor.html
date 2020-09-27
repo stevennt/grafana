@@ -1,0 +1,284 @@
+<query-editor-row query-ctrl="ctrl" can-collapse="false">
+	<div class="gf-form-inline">
+		<div class="gf-form max-width-25">
+			<label class="gf-form-label query-keyword width-8">
+				Metric
+				<label class="gf-form-label" bs-tooltip="ctrl.errors.metric" style="color: rgb(229, 189, 28)" ng-show="ctrl.errors.metric">
+					<i class="fa fa-warning"></i>
+				</label>
+			</label>
+			<input type="text" class="gf-form-input" ng-model="ctrl.target.metric"
+						spellcheck='false' bs-typeahead="ctrl.suggestMetrics" placeholder="metric name" data-min-length=0 data-items=100
+						ng-blur="ctrl.targetBlur()">
+			</input>
+		</div>
+
+		<div class="gf-form max-width-25">
+			<label class="gf-form-label query-keyword width-6">
+				Alias
+				<label class="gf-form-label" 
+					   bs-tooltip="ctrl.errors.metric" 
+					   style="color: rgb(229, 189, 28)" 
+					   ng-show="ctrl.errors.metric">
+					<i class="fa fa-warning"></i>
+				</label>
+			</label>
+			<input type="text" class="gf-form-input" 
+						ng-model="ctrl.target.alias"
+						spellcheck='false' 
+						bs-typeahead="ctrl.suggestAlias" 
+						placeholder="alias" 
+						data-min-length=0 
+						data-items=100
+						ng-trim="false" 
+						ng-blur="ctrl.targetBlur()">
+			</input>
+			<info-popover mode="right-absolute">
+				display alias instead of full name, insert tags using <code>$tag-name</code>
+			</info-popover>
+		</div>
+	  <div class="gf-form max-width-25">
+			<label class="gf-form-label query-keyword width-6">Top-N</label>
+			<input type="text" class="gf-form-input"
+						 ng-model="ctrl.target.topN"
+						 ng-model-onblur
+			       ng-change="ctrl.targetBlur()"
+			       placeholder="Select Top N"></input>
+			<info-popover mode="right-absolute">
+				limit number of series; blank to disable, or for example <code>5</code>
+			</info-popover>
+		</div>
+		<div class="gf-form gf-form--grow">
+			<div class="gf-form-label gf-form-label--grow"></div>
+		</div>
+	</div>
+
+	<div class="gf-form-inline">
+		<div class="gf-form">
+			<label class="gf-form-label query-keyword width-8">
+				Tags
+			</label>
+		</div>
+
+		<div class="gf-form" ng-repeat="(key, value) in ctrl.target.tags track by $index" class="gf-form">
+			<label class="gf-form-label">
+				{{key}}&nbsp;=&nbsp;{{value}}
+				<a ng-click="ctrl.editTag(key, value)">
+					<i class="fa fa-pencil"></i>
+				</a>
+				<a ng-click="ctrl.removeTag(key)">
+					<i class="fa fa-remove"></i>
+				</a>
+			</label>
+		</div>
+
+		<div class="gf-form" ng-hide="ctrl.addTagMode">
+			<label class="gf-form-label query-keyword">
+				<a ng-click="ctrl.addTag()"><i class="fa fa-plus"></i></a>
+			</label>
+		</div>
+
+		<div class="gf-form" ng-show="ctrl.addTagMode">
+			<input type="text"
+						 class="gf-form-input" spellcheck='false'
+						 bs-typeahead="ctrl.suggestTagKeys" data-min-length=0 data-items=100
+					   ng-model="ctrl.target.currentTagKey" placeholder="tag">
+			</input>
+
+			<input type="text" class="gf-form-input"
+						 spellcheck='false' bs-typeahead="ctrl.suggestTagValues"
+						 data-min-length=0 data-items=100 ng-model="ctrl.target.currentTagValue" ng-trim="false" placeholder="value">
+			</input>
+
+			<label class="gf-form-label" ng-show="ctrl.errors.tags">
+				<a bs-tooltip="ctrl.errors.tags" style="color: rgb(229, 189, 28)" >
+					<i class="fa fa-warning"></i>
+				</a>
+			</label>
+			<label class="gf-form-label" >
+				<a ng-click="ctrl.addTag()" ng-hide="ctrl.errors.tags">add tag</a>
+				<a ng-click="ctrl.closeAddTagMode()"><i class="fa fa-remove"></i></a>
+			</label>
+		</div>
+
+		<div class="gf-form gf-form--grow">
+			<div class="gf-form-label gf-form-label--grow"></div>
+		</div>
+	</div>
+
+	<div class="gf-form-inline">
+		<!--Pivot-by-tag-->
+		<div class="gf-form">
+			<label class="gf-form-label query-keyword width-8">
+				Pivot By Tag
+			</label>
+		</div>
+
+		<div class="gf-form" ng-repeat="key in ctrl.target.pivotTags" class="gf-form">
+			<label class="gf-form-label">
+				{{key}}
+				<a ng-click="ctrl.editPivotTag(key)">
+					<i class="fa fa-pencil"></i>
+				</a>
+				<a ng-click="ctrl.removePivotTag(key)">
+					<i class="fa fa-remove"></i>
+				</a>
+			</label>
+		</div>
+
+		<div class="gf-form" ng-hide="ctrl.addPivotTagMode">
+			<label class="gf-form-label query-keyword">
+				<a ng-click="ctrl.addPivotTag()"><i class="fa fa-plus"></i></a>
+			</label>
+		</div>
+
+		<div class="gf-form" ng-show="ctrl.addPivotTagMode">
+			<input type="text"
+				   class="gf-form-input" spellcheck='false'
+				   bs-typeahead="ctrl.suggestTagKeys" data-min-length=0 data-items=100
+				   ng-model="ctrl.target.currentPivotTagKey" placeholder="tag">
+			</input>
+
+			<label class="gf-form-label" ng-show="ctrl.errors.tags">
+				<a bs-tooltip="ctrl.errors.tags" style="color: rgb(229, 189, 28)" >
+					<i class="fa fa-warning"></i>
+				</a>
+			</label>
+			<label class="gf-form-label" >
+				<a ng-click="ctrl.addPivotTag()" ng-hide="ctrl.errors.tags">add tag</a>
+				<a ng-click="ctrl.closeAddPivotTagMode()"><i class="fa fa-remove"></i></a>
+			</label>
+		</div>
+
+		<!--Group-by-tag-->
+		<div class="gf-form">
+			<label class="gf-form-label query-keyword width-8">
+				Group By Tag
+			</label>
+		</div>
+
+		<div class="gf-form" ng-repeat="key in ctrl.target.groupTags" class="gf-form">
+			<label class="gf-form-label">
+				{{key}}
+				<a ng-click="ctrl.editGroupTag(key)">
+					<i class="fa fa-pencil"></i>
+				</a>
+				<a ng-click="ctrl.removeGroupTag(key)">
+					<i class="fa fa-remove"></i>
+				</a>
+			</label>
+		</div>
+
+		<div class="gf-form" ng-hide="ctrl.addGroupTagMode">
+			<label class="gf-form-label query-keyword">
+				<a ng-click="ctrl.addGroupTag()"><i class="fa fa-plus"></i></a>
+			</label>
+		</div>
+
+		<div class="gf-form" ng-show="ctrl.addGroupTagMode">
+			<input type="text"
+				   class="gf-form-input" spellcheck='false'
+				   bs-typeahead="ctrl.suggestTagKeys" data-min-length=0 data-items=100
+				   ng-model="ctrl.target.currentGroupTagKey" placeholder="tag">
+			</input>
+
+			<label class="gf-form-label" ng-show="ctrl.errors.tags">
+				<a bs-tooltip="ctrl.errors.tags" style="color: rgb(229, 189, 28)" >
+					<i class="fa fa-warning"></i>
+				</a>
+			</label>
+			<label class="gf-form-label" >
+				<a ng-click="ctrl.addGroupTag()" ng-hide="ctrl.errors.tags">add tag</a>
+				<a ng-click="ctrl.closeAddGroupTagMode()"><i class="fa fa-remove"></i></a>
+			</label>
+		</div>
+
+		<div class="gf-form gf-form--grow">
+			<div class="gf-form-label gf-form-label--grow"></div>
+		</div>
+	</div>
+
+	<div class="gf-form-inline">
+		<div class="gf-form max-width-25">
+			<label class="gf-form-label query-keyword width-8">Downsample</label>
+			<input type="text" class="gf-form-input"
+						 ng-model="ctrl.target.downsampleInterval"
+						 ng-model-onblur
+			       ng-change="ctrl.targetBlur()"
+			       placeholder="interval"></input>
+			<info-popover mode="right-absolute">
+				blank for auto, or for example <code>1m</code>
+			</info-popover>
+		</div>
+
+		<div class="gf-form">
+			<label class="gf-form-label query-keyword">Func</label>
+			<div class="gf-form-select-wrapper">
+				<select ng-model="ctrl.target.downsampleAggregator" class="gf-form-input"
+								ng-options="agg for agg in ctrl.aggregators"
+				        ng-change="ctrl.targetBlur()">
+				</select>
+			</div>
+		</div>
+
+		<gf-form-switch class="gf-form"
+										label="Raw"
+                    label-class="query-keyword"
+										checked="ctrl.target.disableDownsampling"
+										on-change="ctrl.targetBlur()">
+		</gf-form-switch>
+
+		<gf-form-switch class="gf-form" 
+										label="Rate" 
+										label-class="query-keyword" 
+										checked="ctrl.target.shouldComputeRate" 
+										on-change="ctrl.targetBlur()"/>
+		<!--
+		<gf-form-switch ng-hide="!ctrl.target.shouldComputeRate"
+										class="gf-form" label="Counter" label-class="query-keyword" checked="ctrl.target.isCounter" on-change="ctrl.targetBlur()">
+		</gf-form-switch>
+		-->
+
+		<!--
+	    <gf-form-switch class="gf-form" label="EWMA Smoothing" label-class="width-6 query-keyword" checked="ctrl.target.shouldEWMA" on-change="ctrl.targetBlur()">
+		</gf-form-switch>
+	    <div class="gf-form max-width-25" ng-hide="!ctrl.target.shouldEWMA">
+			<label class="gf-form-label query-keyword width-8">Decay</label>
+			<input type="text" class="gf-form-input"
+						 ng-model="ctrl.target.decay"
+						 ng-model-onblur
+			       ng-change="ctrl.targetBlur()"
+			       placeholder="decay value"></input>
+			<info-popover mode="right-absolute">
+				blank for auto, or for example <code>0.5</code>
+			</info-popover>
+		</div>
+		-->
+		<div class="gf-form gf-form--grow">
+			<div class="gf-form-label gf-form-label--grow"></div>
+		</div>
+
+	</div>
+
+	<div class="gf-form-inline">
+		<div class="gf-form max-width-25">
+			<label class="gf-form-label query-keyword width-8">Time Shift</label>
+			<input type="text" class="gf-form-input" ng-model="ctrl.target.timeshift" ng-model-onblur
+				ng-change="ctrl.targetBlur()" placeholder="Shift query interval"></input>
+			<info-popover mode="right-absolute">
+				blank to disable, or for instance <code>1M</code> or <code>1y</code> for one month and one year shift, time interval literals:<br/>
+				<code>s</code> - seconds<br/>
+				<code>m</code> - minutes<br/>
+				<code>h</code> - hours<br/>
+				<code>d</code> - days<br/>
+				<code>w</code> - weeks<br/>
+				<code>M</code> - months<br/>
+				<code>y</code> - years<br/>
+			</info-popover>
+		</div>
+		<div class="gf-form gf-form--grow">
+			<div class="gf-form-label gf-form-label--grow"></div>
+		</div>
+	</div>
+</query-editor-row>
+
