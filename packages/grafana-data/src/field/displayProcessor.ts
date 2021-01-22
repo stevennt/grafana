@@ -4,19 +4,24 @@ import _ from 'lodash';
 // Types
 import { Field, FieldType } from '../types/dataFrame';
 import { GrafanaTheme } from '../types/theme';
-import { DecimalCount, DecimalInfo, DisplayProcessor, DisplayValue } from '../types/displayValue';
+import { DisplayProcessor, DisplayValue } from '../types/displayValue';
 import { getValueFormat } from '../valueFormats/valueFormats';
 import { getMappedValue } from '../utils/valueMappings';
 import { dateTime } from '../datetime';
 import { KeyValue, TimeZone } from '../types';
 import { getScaleCalculator } from './scale';
+import { getTestTheme } from '../utils/testdata/testTheme';
 
 interface DisplayProcessorOptions {
   field: Partial<Field>;
-
-  // Context
+  /**
+   * Will pick browser timezone if not defined
+   */
   timeZone?: TimeZone;
-  theme?: GrafanaTheme; // Will pick 'dark' if not defined
+  /**
+   * Will pick 'dark' if not defined
+   */
+  theme?: GrafanaTheme;
 }
 
 // Reasonable units for time
@@ -35,16 +40,20 @@ export function getDisplayProcessor(options?: DisplayProcessorOptions): DisplayP
 
   const { field } = options;
   const config = field.config ?? {};
+
+  // Theme should be required or we need access to default theme instance from here
+  const theme = options.theme ?? getTestTheme();
+
   let unit = config.unit;
   let hasDateUnit = unit && (timeFormats[unit] || unit.startsWith('time:'));
 
   if (field.type === FieldType.time && !hasDateUnit) {
-    unit = `dateTimeAsIso`;
+    unit = `dateTimeAsSystem`;
     hasDateUnit = true;
   }
 
   const formatFunc = getValueFormat(unit || 'none');
-  const scaleFunc = getScaleCalculator(field as Field, options.theme);
+  const scaleFunc = getScaleCalculator(field as Field, theme);
 
   return (value: any) => {
     const { mappings } = config;
@@ -77,8 +86,7 @@ export function getDisplayProcessor(options?: DisplayProcessorOptions): DisplayP
 
     if (!isNaN(numeric)) {
       if (shouldFormat && !_.isBoolean(value)) {
-        const { decimals, scaledDecimals } = getDecimalsForValue(value, config.decimals);
-        const v = formatFunc(numeric, decimals, scaledDecimals, options.timeZone);
+        const v = formatFunc(numeric, config.decimals, null, options.timeZone);
         text = v.text;
         suffix = v.suffix;
         prefix = v.prefix;
@@ -126,45 +134,6 @@ function toNumber(value: any): number {
 
 function toStringProcessor(value: any): DisplayValue {
   return { text: _.toString(value), numeric: toNumber(value) };
-}
-
-export function getDecimalsForValue(value: number, decimalOverride?: DecimalCount): DecimalInfo {
-  if (_.isNumber(decimalOverride)) {
-    // It's important that scaledDecimals is null here
-    return { decimals: decimalOverride, scaledDecimals: null };
-  }
-
-  let dec = -Math.floor(Math.log(value) / Math.LN10) + 1;
-  const magn = Math.pow(10, -dec);
-  const norm = value / magn; // norm is between 1.0 and 10.0
-  let size;
-
-  if (norm < 1.5) {
-    size = 1;
-  } else if (norm < 3) {
-    size = 2;
-    // special case for 2.5, requires an extra decimal
-    if (norm > 2.25) {
-      size = 2.5;
-      ++dec;
-    }
-  } else if (norm < 7.5) {
-    size = 5;
-  } else {
-    size = 10;
-  }
-
-  size *= magn;
-
-  // reduce starting decimals if not needed
-  if (value % 1 === 0) {
-    dec = 0;
-  }
-
-  const decimals = Math.max(0, dec);
-  const scaledDecimals = decimals - Math.floor(Math.log(size) / Math.LN10) + 2;
-
-  return { decimals, scaledDecimals };
 }
 
 export function getRawDisplayProcessor(): DisplayProcessor {

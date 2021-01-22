@@ -9,7 +9,7 @@ export const plugin = new PanelPlugin<Options, CustomFieldConfig>(TablePanel)
   .setMigrationHandler(tableMigrationHandler)
   .setNoPadding()
   .useFieldConfig({
-    useCustomConfig: builder => {
+    useCustomConfig: (builder) => {
       builder
         .addNumberInput({
           path: 'width',
@@ -47,6 +47,7 @@ export const plugin = new PanelPlugin<Options, CustomFieldConfig>(TablePanel)
               { value: TableCellDisplayMode.LcdGauge, label: 'LCD gauge' },
               { value: TableCellDisplayMode.BasicGauge, label: 'Basic gauge' },
               { value: TableCellDisplayMode.JSONView, label: 'JSON View' },
+              { value: TableCellDisplayMode.Image, label: 'Image' },
             ],
           },
         })
@@ -58,7 +59,7 @@ export const plugin = new PanelPlugin<Options, CustomFieldConfig>(TablePanel)
         });
     },
   })
-  .setPanelOptions(builder => {
+  .setPanelOptions((builder) => {
     builder.addBooleanSwitch({
       path: 'showHeader',
       name: 'Show header',

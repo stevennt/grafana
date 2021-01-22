@@ -237,7 +237,10 @@ func init() {
 			series := newSeriesForQuery(query, 0)
 			startTime := context.TimeRange.GetFromAsMsEpoch()
 			endTime := context.TimeRange.GetToAsMsEpoch()
-			step := (endTime - startTime) / int64(len(values)-1)
+			var step int64 = 0
+			if len(values) > 1 {
+				step = (endTime - startTime) / int64(len(values)-1)
+			}
 
 			for _, val := range values {
 				series.Points = append(series.Points, tsdb.TimePoint{val, null.FloatFrom(float64(startTime))})
@@ -260,6 +263,15 @@ func init() {
 	})
 
 	registerScenario(&Scenario{
+		Id:   "live",
+		Name: "Grafana Live",
+		Handler: func(query *tsdb.Query, context *tsdb.TsdbQuery) *tsdb.QueryResult {
+			// Real work is in javascript client
+			return tsdb.NewQueryResult()
+		},
+	})
+
+	registerScenario(&Scenario{
 		Id:   "grafana_api",
 		Name: "Grafana API",
 		Handler: func(query *tsdb.Query, context *tsdb.TsdbQuery) *tsdb.QueryResult {
@@ -273,6 +285,14 @@ func init() {
 		Name: "Load Apache Arrow Data",
 		Handler: func(query *tsdb.Query, context *tsdb.TsdbQuery) *tsdb.QueryResult {
 			// Real work is in javascript client
+			return tsdb.NewQueryResult()
+		},
+	})
+
+	registerScenario(&Scenario{
+		Id:   "annotations",
+		Name: "Annotations",
+		Handler: func(query *tsdb.Query, context *tsdb.TsdbQuery) *tsdb.QueryResult {
 			return tsdb.NewQueryResult()
 		},
 	})
@@ -402,6 +422,12 @@ func init() {
 			queryRes.Tables = append(queryRes.Tables, &table)
 			return queryRes
 		},
+	})
+
+	registerScenario(&Scenario{
+		Id:   "node_graph",
+		Name: "Node Graph",
+		// Data generated in JS
 	})
 }
 

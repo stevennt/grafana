@@ -6,12 +6,7 @@ import { Form, Spinner } from '@grafana/ui';
 import Page from 'app/core/components/Page/Page';
 import { connectWithCleanUp } from 'app/core/components/connectWithCleanUp';
 import { NotificationChannelForm } from './components/NotificationChannelForm';
-import {
-  loadNotificationChannel,
-  loadNotificationTypes,
-  testNotificationChannel,
-  updateNotificationChannel,
-} from './state/actions';
+import { loadNotificationChannel, testNotificationChannel, updateNotificationChannel } from './state/actions';
 import { getNavModel } from 'app/core/selectors/navModel';
 import { getRouteParamsId } from 'app/core/selectors/location';
 import { mapChannelsToSelectableValue, transformSubmitData, transformTestData } from './utils/notificationChannels';
@@ -28,7 +23,6 @@ interface ConnectedProps {
 }
 
 interface DispatchProps {
-  loadNotificationTypes: typeof loadNotificationTypes;
   loadNotificationChannel: typeof loadNotificationChannel;
   testNotificationChannel: typeof testNotificationChannel;
   updateNotificationChannel: typeof updateNotificationChannel;
@@ -41,7 +35,6 @@ export class EditNotificationChannelPage extends PureComponent<Props> {
   componentDidMount() {
     const { channelId } = this.props;
 
-    this.props.loadNotificationTypes();
     this.props.loadNotificationChannel(channelId);
   }
 
@@ -90,15 +83,15 @@ export class EditNotificationChannelPage extends PureComponent<Props> {
               onSubmit={this.onSubmit}
               defaultValues={{
                 ...notificationChannel,
-                type: notificationChannelTypes.find(n => n.value === notificationChannel.type),
+                type: notificationChannelTypes.find((n) => n.value === notificationChannel.type),
               }}
             >
               {({ control, errors, getValues, register, watch }) => {
-                const selectedChannel = notificationChannelTypes.find(c => c.value === getValues().type.value);
+                const selectedChannel = notificationChannelTypes.find((c) => c.value === getValues().type.value);
 
                 return (
                   <NotificationChannelForm
-                    selectableChannels={mapChannelsToSelectableValue(notificationChannelTypes)}
+                    selectableChannels={mapChannelsToSelectableValue(notificationChannelTypes, true)}
                     selectedChannel={selectedChannel}
                     imageRendererAvailable={config.rendererAvailable}
                     onTestChannel={this.onTestChannel}
@@ -125,7 +118,7 @@ export class EditNotificationChannelPage extends PureComponent<Props> {
   }
 }
 
-const mapStateToProps: MapStateToProps<ConnectedProps, OwnProps, StoreState> = state => {
+const mapStateToProps: MapStateToProps<ConnectedProps, OwnProps, StoreState> = (state) => {
   const channelId = getRouteParamsId(state.location) as number;
   return {
     navModel: getNavModel(state.navIndex, 'channels'),
@@ -136,7 +129,6 @@ const mapStateToProps: MapStateToProps<ConnectedProps, OwnProps, StoreState> = s
 };
 
 const mapDispatchToProps: MapDispatchToProps<DispatchProps, OwnProps> = {
-  loadNotificationTypes,
   loadNotificationChannel,
   testNotificationChannel,
   updateNotificationChannel,
@@ -146,5 +138,5 @@ const mapDispatchToProps: MapDispatchToProps<DispatchProps, OwnProps> = {
 export default connectWithCleanUp(
   mapStateToProps,
   mapDispatchToProps,
-  state => state.notificationChannel
+  (state) => state.notificationChannel
 )(EditNotificationChannelPage);

@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Alert,
   Button,
   Container,
   CustomScrollbar,
@@ -10,16 +11,14 @@ import {
   VerticalGroup,
 } from '@grafana/ui';
 import {
+  DataFrame,
   DataTransformerConfig,
+  DocsId,
   GrafanaTheme,
+  PanelData,
   SelectableValue,
   standardTransformersRegistry,
-  transformDataFrame,
-  DataFrame,
-  PanelData,
-  DocsId,
 } from '@grafana/data';
-import { TransformationOperationRow } from './TransformationOperationRow';
 import { Card, CardProps } from '../../../../core/components/Card/Card';
 import { css } from 'emotion';
 import { selectors } from '@grafana/e2e-selectors';
@@ -27,14 +26,13 @@ import { Unsubscribable } from 'rxjs';
 import { PanelModel } from '../../state';
 import { getDocsLink } from 'app/core/utils/docsLinks';
 import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
+import { TransformationOperationRows } from './TransformationOperationRows';
+import { TransformationsEditorTransformation } from './types';
+import { PanelNotSupported } from '../PanelEditor/PanelNotSupported';
+import { AppNotificationSeverity } from '../../../../types';
 
 interface TransformationsEditorProps {
   panel: PanelModel;
-}
-
-interface TransformationsEditorTransformation {
-  transformation: DataTransformerConfig;
-  id: string;
 }
 
 interface State {
@@ -92,7 +90,7 @@ export class TransformationsEditor extends React.PureComponent<TransformationsEd
 
   onChange(transformations: TransformationsEditorTransformation[]) {
     this.setState({ transformations });
-    this.props.panel.setTransformations(transformations.map(t => t.transformation));
+    this.props.panel.setTransformations(transformations.map((t) => t.transformation));
   }
 
   // Transformation uid are stored in a name-X form. name is NOT unique hence we need to parse the ids and increase X
@@ -100,10 +98,10 @@ export class TransformationsEditor extends React.PureComponent<TransformationsEd
   getTransformationNextId = (name: string) => {
     const { transformations } = this.state;
     let nextId = 0;
-    const existingIds = transformations.filter(t => t.id.startsWith(name)).map(t => t.id);
+    const existingIds = transformations.filter((t) => t.id.startsWith(name)).map((t) => t.id);
 
     if (existingIds.length !== 0) {
-      nextId = Math.max(...existingIds.map(i => parseInt(i.match(/\d+/)![0], 10))) + 1;
+      nextId = Math.max(...existingIds.map((i) => parseInt(i.match(/\d+/)![0], 10))) + 1;
     }
 
     return `${name}-${nextId}`;
@@ -140,7 +138,7 @@ export class TransformationsEditor extends React.PureComponent<TransformationsEd
   };
 
   renderTransformationSelector = () => {
-    const availableTransformers = standardTransformersRegistry.list().map(t => {
+    const availableTransformers = standardTransformersRegistry.list().map((t) => {
       return {
         value: t.transformation.id,
         label: t.name,
@@ -161,7 +159,6 @@ export class TransformationsEditor extends React.PureComponent<TransformationsEd
           options={availableTransformers}
           onChange={this.onTransformationAdd}
           isFullWidth={false}
-          menuPlacement="bottom"
         />
       </div>
     );
@@ -191,56 +188,15 @@ export class TransformationsEditor extends React.PureComponent<TransformationsEd
     return (
       <DragDropContext onDragEnd={this.onDragEnd}>
         <Droppable droppableId="transformations-list" direction="vertical">
-          {provided => {
+          {(provided) => {
             return (
               <div ref={provided.innerRef} {...provided.droppableProps}>
-                {transformations.map((t, i) => {
-                  // Transformations are not identified uniquely by any property apart from array index.
-                  // For drag and drop to work we need to generate unique ids. This record stores counters for each transformation type
-                  // based on which ids are generated
-                  let editor;
-
-                  const transformationUI = standardTransformersRegistry.getIfExists(t.transformation.id);
-                  if (!transformationUI) {
-                    return null;
-                  }
-
-                  const input = transformDataFrame(
-                    transformations.slice(0, i).map(t => t.transformation),
-                    data
-                  );
-                  const output = transformDataFrame(
-                    transformations.slice(i).map(t => t.transformation),
-                    input
-                  );
-
-                  if (transformationUI) {
-                    editor = React.createElement(transformationUI.editor, {
-                      options: { ...transformationUI.transformation.defaultOptions, ...t.transformation.options },
-                      input,
-                      onChange: (options: any) => {
-                        this.onTransformationChange(i, {
-                          id: t.transformation.id,
-                          options,
-                        });
-                      },
-                    });
-                  }
-
-                  return (
-                    <TransformationOperationRow
-                      index={i}
-                      id={`${t.id}`}
-                      key={`${t.id}`}
-                      input={input || []}
-                      output={output || []}
-                      onRemove={() => this.onTransformationRemove(i)}
-                      editor={editor}
-                      name={transformationUI.name}
-                      description={transformationUI.description}
-                    />
-                  );
-                })}
+                <TransformationOperationRows
+                  configs={transformations}
+                  data={data}
+                  onRemove={this.onTransformationRemove}
+                  onChange={this.onTransformationChange}
+                />
                 {provided.placeholder}
               </div>
             );
@@ -258,14 +214,14 @@ export class TransformationsEditor extends React.PureComponent<TransformationsEd
             <p>
               Transformations allow you to join, calculate, re-order, hide and rename your query results before being
               visualized. <br />
-              Many transforms are not suitable if you're using the Graph visualization as it currently only supports
-              time series. <br />
+              Many transforms are not suitable if you&apos;re using the Graph visualization as it currently only
+              supports time series. <br />
               It can help to switch to Table visualization to understand what a transformation is doing. <br />
             </p>
           </FeatureInfoBox>
         </Container>
         <VerticalGroup>
-          {standardTransformersRegistry.list().map(t => {
+          {standardTransformersRegistry.list().map((t) => {
             return (
               <TransformationCard
                 key={t.name}
@@ -285,14 +241,27 @@ export class TransformationsEditor extends React.PureComponent<TransformationsEd
   }
 
   render() {
+    const {
+      panel: { alert },
+    } = this.props;
     const { transformations } = this.state;
 
     const hasTransforms = transformations.length > 0;
+
+    if (!hasTransforms && alert) {
+      return <PanelNotSupported message="Transformations can't be used on a panel with existing alerts" />;
+    }
 
     return (
       <CustomScrollbar autoHeightMin="100%">
         <Container padding="md">
           <div aria-label={selectors.components.TransformTab.content}>
+            {hasTransforms && alert ? (
+              <Alert
+                severity={AppNotificationSeverity.Error}
+                title="Transformations can't be used on a panel with alerts"
+              />
+            ) : null}
             {!hasTransforms && this.renderNoAddedTransformsState()}
             {hasTransforms && this.renderTransformationEditors()}
             {hasTransforms && this.renderTransformationSelector()}
@@ -303,7 +272,7 @@ export class TransformationsEditor extends React.PureComponent<TransformationsEd
   }
 }
 
-const TransformationCard: React.FC<CardProps> = props => {
+const TransformationCard: React.FC<CardProps> = (props) => {
   const theme = useTheme();
   const styles = getTransformationCardStyles(theme);
   return <Card {...props} className={styles.card} />;

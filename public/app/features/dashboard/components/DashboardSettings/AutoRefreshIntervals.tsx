@@ -1,6 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, Tooltip } from '@grafana/ui';
-import { defaultIntervals } from '@grafana/ui/src/components/RefreshPicker/RefreshPicker';
+import { Input, Tooltip, defaultIntervals } from '@grafana/ui';
 
 import { getTimeSrv } from '../../services/TimeSrv';
 
@@ -88,6 +87,6 @@ export const getValidIntervals = (
   intervals: string[],
   dependencies: { getTimeSrv: typeof getTimeSrv } = { getTimeSrv }
 ) => {
-  const cleanIntervals = intervals.filter(i => i.trim() !== '').map(interval => interval.replace(/\s+/g, ''));
+  const cleanIntervals = intervals.filter((i) => i.trim() !== '').map((interval) => interval.replace(/\s+/g, ''));
   return [...new Set(dependencies.getTimeSrv().getValidIntervals(cleanIntervals))];
 };

@@ -11,12 +11,12 @@ import { DataProcessor } from './data_processor';
 import { axesEditorComponent } from './axes_editor';
 import config from 'app/core/config';
 import TimeSeries from 'app/core/time_series2';
-import { getProcessedDataFrames } from 'app/features/dashboard/state/runRequest';
-import { getColorFromHexRgbOrName, PanelEvents, PanelPlugin, DataFrame, FieldConfigProperty } from '@grafana/data';
+import { getProcessedDataFrames } from 'app/features/query/state/runRequest';
+import { DataFrame, FieldConfigProperty, getColorForTheme, PanelEvents, PanelPlugin } from '@grafana/data';
 
 import { GraphContextMenuCtrl } from './GraphContextMenuCtrl';
 import { graphPanelMigrationHandler } from './GraphMigrations';
-import { DataWarning, GraphPanelOptions, GraphFieldConfig } from './types';
+import { DataWarning, GraphFieldConfig, GraphPanelOptions } from './types';
 
 import { auto } from 'angular';
 import { AnnotationsSrv } from 'app/features/annotations/all';
@@ -25,8 +25,8 @@ import { getLocationSrv } from '@grafana/runtime';
 import { getDataTimeRange } from './utils';
 import { changePanelPlugin } from 'app/features/dashboard/state/actions';
 import { dispatch } from 'app/store/store';
-
 import { ThresholdMapper } from 'app/features/alerting/state/ThresholdMapper';
+import { getAnnotationsFromData } from 'app/features/annotations/standardAnnotationSupport';
 
 export class GraphCtrl extends MetricsPanelCtrl {
   static template = template;
@@ -235,6 +235,10 @@ export class GraphCtrl extends MetricsPanelCtrl {
           (this.seriesList as any).alertState = this.alertState.state;
         }
 
+        if (this.panelData!.annotations?.length) {
+          this.annotations = getAnnotationsFromData(this.panelData!.annotations!);
+        }
+
         this.render(this.seriesList);
       },
       () => {
@@ -323,7 +327,7 @@ export class GraphCtrl extends MetricsPanelCtrl {
   }
 
   onColorChange = (series: any, color: string) => {
-    series.setColor(getColorFromHexRgbOrName(color, config.theme.type));
+    series.setColor(getColorForTheme(color, config.theme));
     this.panel.aliasColors[series.alias] = color;
     this.render();
   };
@@ -377,17 +381,21 @@ export class GraphCtrl extends MetricsPanelCtrl {
   getTimeZone = () => this.dashboard.getTimezone();
 
   getDataFrameByRefId = (refId: string) => {
-    return this.dataList.filter(dataFrame => dataFrame.refId === refId)[0];
+    return this.dataList.filter((dataFrame) => dataFrame.refId === refId)[0];
   };
 }
 
 // Use new react style configuration
 export const plugin = new PanelPlugin<GraphPanelOptions, GraphFieldConfig>(null)
   .useFieldConfig({
-    standardOptions: [
-      FieldConfigProperty.DisplayName,
-      FieldConfigProperty.Unit,
-      FieldConfigProperty.Links, // previously saved as dataLinks on options
+    disableStandardOptions: [
+      FieldConfigProperty.NoValue,
+      FieldConfigProperty.Thresholds,
+      FieldConfigProperty.Max,
+      FieldConfigProperty.Min,
+      FieldConfigProperty.Decimals,
+      FieldConfigProperty.Color,
+      FieldConfigProperty.Mappings,
     ],
   })
   .setMigrationHandler(graphPanelMigrationHandler);

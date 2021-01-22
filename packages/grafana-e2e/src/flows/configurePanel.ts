@@ -116,31 +116,24 @@ export const configurePanel = (config: PartialAddPanelConfig | PartialEditPanelC
 
     // @todo alias '/**/*.js*' as '@pluginModule' when possible: https://github.com/cypress-io/cypress/issues/1296
 
-    e2e()
-      .route(chartData.method, chartData.route)
-      .as('chartData');
+    e2e().route(chartData.method, chartData.route).as('chartData');
 
     if (dataSourceName) {
-      selectOption(e2e.components.DataSourcePicker.container(), dataSourceName);
+      selectOption({
+        container: e2e.components.DataSourcePicker.container(),
+        optionText: dataSourceName,
+      });
     }
 
-    // @todo instead wait for '@pluginModule'
+    // @todo instead wait for '@pluginModule' if not already loaded
     e2e().wait(2000);
 
-    // There is no usable data when the query is empty,
-    // and Cypress had an issue with some plugins where the request wasn't noticed, despite occuring in manual tests
-    if (isEdit) {
-      // Avoid cache flakiness (where @chartData isn't requested)
-      // @todo this may not be necessary anymore
-      e2e()
-        .get('.refresh-picker-buttons .btn')
-        .first()
-        .click({ force: true });
-
-      e2e().wait('@chartData');
-    }
-
     if (!isExplore) {
+      if (!isEdit) {
+        // Fields could be covered due to an empty query editor
+        closeRequestErrors();
+      }
+
       // `panelTitle` is needed to edit the panel, and unlikely to have its value changed at that point
       const changeTitle = panelTitle && !isEdit;
 
@@ -158,9 +151,10 @@ export const configurePanel = (config: PartialAddPanelConfig | PartialEditPanelC
 
         if (visualizationName) {
           openOptionsGroup('type');
-          e2e.components.PluginVisualization.item(visualizationName)
-            .scrollIntoView()
-            .click();
+          e2e.components.PluginVisualization.item(visualizationName).scrollIntoView().click();
+
+          // @todo wait for '@pluginModule' if not a core visualization and not already loaded
+          e2e().wait(2000);
         }
 
         // Consistently closed
@@ -190,19 +184,12 @@ export const configurePanel = (config: PartialAddPanelConfig | PartialEditPanelC
     //e2e().wait('@chartData');
 
     if (!isExplore) {
-      e2e()
-        .get('button[title="Apply changes and go back to dashboard"]')
-        .click();
-      e2e()
-        .url()
-        .should('include', `/d/${dashboardUid}`);
+      e2e().get('button[title="Apply changes and go back to dashboard"]').click();
+      e2e().url().should('include', `/d/${dashboardUid}`);
     }
 
     // Avoid annotations flakiness
-    e2e()
-      .get('.refresh-picker-buttons .btn')
-      .first()
-      .click();
+    e2e().get('.refresh-picker-buttons .btn').first().click();
 
     e2e().wait('@chartData');
 
@@ -242,6 +229,21 @@ const closeOptionsGroup = (name: string): any =>
     }
   });
 
+const closeRequestErrors = () => {
+  e2e().wait(1000); // emulate `cy.get()` for nested errors
+  e2e()
+    .get('app-notifications-list')
+    .then(($elm) => {
+      // Avoid failing when none are found
+      const selector = '[aria-label="Alert error"]:contains("Failed to call resource")';
+      const numErrors = $elm.find(selector).length;
+
+      for (let i = 0; i < numErrors; i++) {
+        e2e().get(selector).first().find('button').click();
+      }
+    });
+};
+
 const getOptionsGroup = (name: string) => e2e().get(`.options-group:has([aria-label="Options group Panel ${name}"])`);
 
 // @todo this actually returns type `Cypress.Chainable`
@@ -279,10 +281,7 @@ const openOptionsGroup = (name: string): any =>
     }
   });
 
-const toggleOptionsGroup = (name: string) =>
-  getOptionsGroup(name)
-    .find('.editor-options-group-toggle')
-    .click();
+const toggleOptionsGroup = (name: string) => getOptionsGroup(name).find('.editor-options-group-toggle').click();
 
 export const VISUALIZATION_ALERT_LIST = 'Alert list';
 export const VISUALIZATION_BAR_GAUGE = 'Bar gauge';

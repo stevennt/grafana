@@ -21,7 +21,7 @@ export default {
   },
 };
 
-const IconWrapper: React.FC<{ name: IconName }> = ({ name }) => {
+const IconWrapper = ({ name }: { name: IconName }) => {
   const theme = useTheme();
   const borderColor = selectThemeVariant(
     {
@@ -61,7 +61,7 @@ const IconWrapper: React.FC<{ name: IconName }> = ({ name }) => {
 
 const icons = getAvailableIcons().sort((a, b) => a.localeCompare(b));
 
-export const iconsOverview = () => {
+export const IconsOverview = () => {
   const [filter, setFilter] = useState('');
 
   const searchIcon = (event: ChangeEvent<HTMLInputElement>) => {
@@ -90,8 +90,8 @@ export const iconsOverview = () => {
         `}
       >
         {icons
-          .filter(val => val.includes(filter))
-          .map(i => {
+          .filter((val) => val.includes(filter))
+          .map((i) => {
             return <IconWrapper name={i} key={i} />;
           })}
       </div>

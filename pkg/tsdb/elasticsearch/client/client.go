@@ -226,7 +226,11 @@ func (c *baseClientImpl) ExecuteMultisearch(r *MultiSearchRequest) (*MultiSearch
 		return nil, err
 	}
 	res := clientRes.httpResponse
-	defer res.Body.Close()
+	defer func() {
+		if err := res.Body.Close(); err != nil {
+			clientLog.Warn("Failed to close response body", "err", err)
+		}
+	}()
 
 	clientLog.Debug("Received multisearch response", "code", res.StatusCode, "status", res.Status, "content-length", res.ContentLength)
 
@@ -308,20 +312,12 @@ func (c *baseClientImpl) createMultiSearchRequests(searchRequests []*SearchReque
 }
 
 func (c *baseClientImpl) getMultiSearchQueryParameters() string {
-	var qs []string
-
 	if c.version >= 70 {
 		maxConcurrentShardRequests := c.getSettings().Get("maxConcurrentShardRequests").MustInt(5)
-		qs = append(qs, fmt.Sprintf("max_concurrent_shard_requests=%d", maxConcurrentShardRequests))
-
-		includeFrozen := c.getSettings().Get("includeFrozen").MustBool(false)
-
-		if includeFrozen {
-			qs = append(qs, "ignore_throttled=false")
-		}
+		return fmt.Sprintf("max_concurrent_shard_requests=%d", maxConcurrentShardRequests)
 	}
 
-	return strings.Join(qs, "&")
+	return ""
 }
 
 func (c *baseClientImpl) MultiSearch() *MultiSearchRequestBuilder {

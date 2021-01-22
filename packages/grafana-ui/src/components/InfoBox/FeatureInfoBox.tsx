@@ -5,13 +5,13 @@ import { stylesFactory, useTheme } from '../../themes';
 import { Badge, BadgeProps } from '../Badge/Badge';
 import { css } from 'emotion';
 
-interface FeatureInfoBox extends Omit<InfoBoxProps, 'branded' | 'title' | 'urlTitle'> {
+interface FeatureInfoBoxProps extends Omit<InfoBoxProps, 'branded' | 'title' | 'urlTitle'> {
   title: string;
   featureState?: FeatureState;
 }
 
 export const FeatureInfoBox = React.memo(
-  React.forwardRef<HTMLDivElement, FeatureInfoBox>(({ title, featureState, ...otherProps }, ref) => {
+  React.forwardRef<HTMLDivElement, FeatureInfoBoxProps>(({ title, featureState, ...otherProps }, ref) => {
     const theme = useTheme();
     const styles = getFeatureInfoBoxStyles(theme);
 
@@ -28,6 +28,7 @@ export const FeatureInfoBox = React.memo(
     return <InfoBox branded title={titleEl} urlTitle="Read documentation" {...otherProps} />;
   })
 );
+FeatureInfoBox.displayName = 'FeatureInfoBox';
 
 const getFeatureInfoBoxStyles = stylesFactory((theme: GrafanaTheme) => {
   return {
@@ -39,11 +40,12 @@ const getFeatureInfoBoxStyles = stylesFactory((theme: GrafanaTheme) => {
 
 interface FeatureBadgeProps {
   featureState: FeatureState;
+  tooltip?: string;
 }
 
-export const FeatureBadge: React.FC<FeatureBadgeProps> = ({ featureState }) => {
+export const FeatureBadge: React.FC<FeatureBadgeProps> = ({ featureState, tooltip }) => {
   const display = getPanelStateBadgeDisplayModel(featureState);
-  return <Badge text={display.text} color={display.color} icon={display.icon} />;
+  return <Badge text={display.text} color={display.color} icon={display.icon} tooltip={tooltip} />;
 };
 
 function getPanelStateBadgeDisplayModel(featureState: FeatureState): BadgeProps {

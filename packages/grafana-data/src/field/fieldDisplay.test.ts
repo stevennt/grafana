@@ -2,9 +2,9 @@ import merge from 'lodash/merge';
 import { getFieldDisplayValues, GetFieldDisplayValuesOptions } from './fieldDisplay';
 import { toDataFrame } from '../dataframe/processDataFrame';
 import { ReducerID } from '../transformations/fieldReducer';
-import { GrafanaTheme } from '../types/theme';
 import { MappingType } from '../types';
 import { standardFieldConfigEditorRegistry } from './standardFieldConfigEditorRegistry';
+import { getTestTheme } from '../utils/testdata/testTheme';
 
 describe('FieldDisplay', () => {
   beforeAll(() => {
@@ -35,7 +35,7 @@ describe('FieldDisplay', () => {
       },
     });
     const display = getFieldDisplayValues(options);
-    expect(display.map(v => v.display.text)).toEqual(['1', '2']);
+    expect(display.map((v) => v.display.text)).toEqual(['1', '2']);
   });
 
   it('show last numeric values', () => {
@@ -45,7 +45,7 @@ describe('FieldDisplay', () => {
       },
     });
     const display = getFieldDisplayValues(options);
-    expect(display.map(v => v.display.numeric)).toEqual([5, 6]);
+    expect(display.map((v) => v.display.numeric)).toEqual([5, 6]);
   });
 
   it('show all numeric values', () => {
@@ -57,7 +57,7 @@ describe('FieldDisplay', () => {
       },
     });
     const display = getFieldDisplayValues(options);
-    expect(display.map(v => v.display.numeric)).toEqual([1, 3, 5, 2, 4, 6]);
+    expect(display.map((v) => v.display.numeric)).toEqual([1, 3, 5, 2, 4, 6]);
   });
 
   it('show 2 numeric values (limit)', () => {
@@ -69,7 +69,7 @@ describe('FieldDisplay', () => {
       },
     });
     const display = getFieldDisplayValues(options);
-    expect(display.map(v => v.display.numeric)).toEqual([1, 3]); // First 2 are from the first field
+    expect(display.map((v) => v.display.numeric)).toEqual([1, 3]); // First 2 are from the first field
   });
 
   it('Should return field thresholds when there is no data', () => {
@@ -241,7 +241,7 @@ function createDisplayOptions(extend: Partial<GetFieldDisplayValuesOptions> = {}
       overrides: [],
       defaults: {},
     },
-    theme: {} as GrafanaTheme,
+    theme: getTestTheme(),
   };
 
   return merge<GetFieldDisplayValuesOptions, any>(options, extend);

@@ -1,7 +1,9 @@
 import React, { PureComponent } from 'react';
 import { connect, MapDispatchToProps, MapStateToProps } from 'react-redux';
-import { StoreState } from 'app/types';
 import { ClickOutsideWrapper } from '@grafana/ui';
+import { LoadingState } from '@grafana/data';
+
+import { StoreState } from 'app/types';
 import { VariableLink } from '../shared/VariableLink';
 import { VariableInput } from '../shared/VariableInput';
 import { commitChangesToVariable, filterOrSearchOptions, navigateOptions, toggleAndFetchTag } from './actions';
@@ -11,6 +13,8 @@ import { VariableOptions } from '../shared/VariableOptions';
 import { isQuery } from '../../guard';
 import { VariablePickerProps } from '../types';
 import { formatVariableLabel } from '../../shared/formatVariable';
+import { toVariableIdentifier } from '../../state/types';
+import { getVariableQueryRunner } from '../../query/VariableQueryRunner';
 
 interface OwnProps extends VariablePickerProps<VariableWithMultiSupport> {}
 
@@ -67,9 +71,22 @@ export class OptionsPickerUnconnected extends PureComponent<Props> {
 
     const linkText = formatVariableLabel(variable);
     const tags = getSelectedTags(variable);
+    const loading = variable.state === LoadingState.Loading;
 
-    return <VariableLink text={linkText} tags={tags} onClick={this.onShowOptions} />;
+    return (
+      <VariableLink
+        text={linkText}
+        tags={tags}
+        onClick={this.onShowOptions}
+        loading={loading}
+        onCancel={this.onCancel}
+      />
+    );
   }
+
+  onCancel = () => {
+    getVariableQueryRunner().cancelRequest(toVariableIdentifier(this.props.variable));
+  };
 
   renderOptions(showOptions: boolean, picker: OptionsPickerState) {
     if (!showOptions) {
@@ -102,7 +119,7 @@ const getSelectedTags = (variable: VariableWithOptions): VariableTag[] => {
   if (!isQuery(variable) || !Array.isArray(variable.tags)) {
     return [];
   }
-  return variable.tags.filter(t => t.selected);
+  return variable.tags.filter((t) => t.selected);
 };
 
 const mapDispatchToProps: MapDispatchToProps<DispatchProps, OwnProps> = {
@@ -115,7 +132,7 @@ const mapDispatchToProps: MapDispatchToProps<DispatchProps, OwnProps> = {
   navigateOptions,
 };
 
-const mapStateToProps: MapStateToProps<ConnectedProps, OwnProps, StoreState> = state => ({
+const mapStateToProps: MapStateToProps<ConnectedProps, OwnProps, StoreState> = (state) => ({
   picker: state.templating.optionsPicker,
 });
 

@@ -9,7 +9,7 @@ import {
   selectorRegexp,
   processLabels,
 } from 'app/plugins/datasource/prometheus/language_utils';
-import syntax, { FUNCTIONS } from './syntax';
+import syntax, { FUNCTIONS, PIPE_PARSERS, PIPE_OPERATORS } from './syntax';
 
 // Types
 import { LokiQuery } from './types';
@@ -41,7 +41,7 @@ type TypeaheadContext = {
 
 export function addHistoryMetadata(item: CompletionItem, history: LokiHistoryItem[]): CompletionItem {
   const cutoffTs = Date.now() - HISTORY_COUNT_CUTOFF;
-  const historyForItem = history.filter(h => h.ts > cutoffTs && h.query.expr === item.label);
+  const historyForItem = history.filter((h) => h.ts > cutoffTs && h.query.expr === item.label);
   let hint = `Queried ${historyForItem.length} times in the last 24h.`;
   const recent = historyForItem[0];
 
@@ -84,7 +84,7 @@ export default class LokiLanguageProvider extends LanguageProvider {
   }
 
   // Strip syntax chars
-  cleanText = (s: string) => s.replace(/[{}[\]="(),!~+\-*/^%]/g, '').trim();
+  cleanText = (s: string) => s.replace(/[{}[\]="(),!~+\-*/^%\|]/g, '').trim();
 
   getSyntax(): Grammar {
     return syntax;
@@ -165,6 +165,8 @@ export default class LokiLanguageProvider extends LanguageProvider {
     } else if (wrapperClasses.includes('context-labels')) {
       // Suggestions for {|} and {foo=|}
       return await this.getLabelCompletionItems(input, context);
+    } else if (wrapperClasses.includes('context-pipe')) {
+      return this.getPipeCompletionItem();
     } else if (empty) {
       // Suggestions for empty query field
       return this.getEmptyCompletionItems(context);
@@ -191,12 +193,12 @@ export default class LokiLanguageProvider extends LanguageProvider {
 
     if (history?.length) {
       const historyItems = _.chain(history)
-        .map(h => h.query.expr)
+        .map((h) => h.query.expr)
         .filter()
         .uniq()
         .take(HISTORY_ITEM_COUNT)
         .map(wrapLabel)
-        .map(item => addHistoryMetadata(item, history))
+        .map((item) => addHistoryMetadata(item, history))
         .value();
 
       suggestions.push({
@@ -216,7 +218,23 @@ export default class LokiLanguageProvider extends LanguageProvider {
     suggestions.push({
       prefixMatch: true,
       label: 'Functions',
-      items: FUNCTIONS.map(suggestion => ({ ...suggestion, kind: 'function' })),
+      items: FUNCTIONS.map((suggestion) => ({ ...suggestion, kind: 'function' })),
+    });
+
+    return { suggestions };
+  };
+
+  getPipeCompletionItem = (): TypeaheadOutput => {
+    const suggestions = [];
+
+    suggestions.push({
+      label: 'Operators',
+      items: PIPE_OPERATORS.map((suggestion) => ({ ...suggestion, kind: 'operators' })),
+    });
+
+    suggestions.push({
+      label: 'Parsers',
+      items: PIPE_PARSERS.map((suggestion) => ({ ...suggestion, kind: 'parsers' })),
     });
 
     return { suggestions };
@@ -298,7 +316,7 @@ export default class LokiLanguageProvider extends LanguageProvider {
       if (labelKeys) {
         const possibleKeys = _.difference(labelKeys, existingKeys);
         if (possibleKeys.length) {
-          const newItems = possibleKeys.map(key => ({ label: key }));
+          const newItems = possibleKeys.map((key) => ({ label: key }));
           const newSuggestion: CompletionItemGroup = { label: `Labels`, items: newItems };
           suggestions.push(newSuggestion);
         }
@@ -311,7 +329,7 @@ export default class LokiLanguageProvider extends LanguageProvider {
   async importQueries(queries: LokiQuery[], datasourceType: string): Promise<LokiQuery[]> {
     if (datasourceType === 'prometheus') {
       return Promise.all(
-        queries.map(async query => {
+        queries.map(async (query) => {
           const expr = await this.importPrometheusQuery(query.expr);
           const { ...rest } = query as PromQuery;
           return {
@@ -322,7 +340,7 @@ export default class LokiLanguageProvider extends LanguageProvider {
       );
     }
     // Return a cleaned LokiQuery
-    return queries.map(query => ({
+    return queries.map((query) => ({
       refId: query.refId,
       expr: '',
     }));
@@ -365,7 +383,7 @@ export default class LokiLanguageProvider extends LanguageProvider {
 
     const labelKeys = Object.keys(labelsToKeep).sort();
     const cleanSelector = labelKeys
-      .map(key => `${key}${labelsToKeep[key].operator}${labelsToKeep[key].value}`)
+      .map((key) => `${key}${labelsToKeep[key].operator}${labelsToKeep[key].value}`)
       .join(',');
 
     return ['{', cleanSelector, '}'].join('');
@@ -479,11 +497,11 @@ export default class LokiLanguageProvider extends LanguageProvider {
   }
 
   private addLabelValuesToOptions = (labelKey: string, values: string[]) => {
-    return this.logLabelOptions.map(keyOption =>
+    return this.logLabelOptions.map((keyOption) =>
       keyOption.value === labelKey
         ? {
             ...keyOption,
-            children: values.map(value => ({ label: value, value })),
+            children: values.map((value) => ({ label: value, value })),
           }
         : keyOption
     );
